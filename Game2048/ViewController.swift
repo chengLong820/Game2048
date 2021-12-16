@@ -23,11 +23,15 @@ class ViewController: UIViewController {
     // label的显示内容
     var labelText:[String] = Array.init(repeating: " ", count: 16)
     
+    // 检测滑动手势
     var leftRecognizer: UISwipeGestureRecognizer!
     var rightRecognizer: UISwipeGestureRecognizer!
     var upRecognizer: UISwipeGestureRecognizer!
     var downRecognizer: UISwipeGestureRecognizer!
     
+    // 记录分数
+    var nowScore: Int = 0
+    var highestScore = UserDefaults.standard.integer(forKey: "HighestScore")
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,6 +39,7 @@ class ViewController: UIViewController {
         view.backgroundColor = .black
         initView()
         newGame()
+        handleSwipeGesture()
     }
     
     func initView() {
@@ -43,25 +48,38 @@ class ViewController: UIViewController {
         setupHighestScoreLabel()
         setupRestartButton()
         setupCollectionView()
-        handleSwipeGesture()
     }
     
     @objc func newGame() {
-        print("重新开始！")
+        if nowScore > highestScore {
+            UserDefaults.standard.set(nowScore, forKey: "HighestScore")
+        }
+        nowScore = 0
+        highestScore = UserDefaults.standard.integer(forKey: "HighestScore")
+        initView()
         labelText = Array.init(repeating: " ", count: 16)
-        for _ in 1...3 {
+        for _ in 1...2 {
             generateNewLabel()
         }
         collectionView.reloadData()
     }
     
     func generateNewLabel() {
-        var flag = 0
-        while flag == 0 {
-            let index = Int(arc4random()) % 16
+        var hasEmpty = false
+        for index in 0...15 {
             if labelText[index] == " " {
-                labelText[index] = String(2 * (Int(arc4random()) % 2 + 1))
-                flag = 1
+                hasEmpty = true
+                break
+            }
+        }
+        if hasEmpty {
+            var flag = 0
+            while flag == 0 {
+                let index = Int(arc4random()) % 16
+                if labelText[index] == " " {
+                    labelText[index] = String(2 * (Int(arc4random()) % 2 + 1))
+                    flag = 1
+                }
             }
         }
     }
@@ -86,7 +104,7 @@ class ViewController: UIViewController {
     }
     
     @objc func handleSwipeToLeft() {
-//        print("swipe to left")
+        var hasMoved = false
         for i in 0...3 {
             var index1 = 0
             var index2 = 0
@@ -102,12 +120,14 @@ class ViewController: UIViewController {
                         index2 += 1
                     }
                     if index1<=3 && index2<=3 && labelText[index1+4*i]==labelText[index2+4*i] {
-                        labelText[index1+4*i] = String(Int(labelText[index2+4*i])! * 2)
+                        hasMoved = true
+                        labelText[index1+4*i] = String(Int(labelText[index1+4*i])! * 2)
                         labelText[index2+4*i] = " "
+                        nowScore += Int(labelText[index1+4*i])! 
+                        nowScoreLabel.text = String(nowScore)
                     }
                 }
                 index1 += 1
-                index2 += 1
             }
             
             // 向左合并
@@ -123,13 +143,20 @@ class ViewController: UIViewController {
                     tail += 1
                 }
             }
+            if !(temp[0]==labelText[0+4*i] && temp[1]==labelText[1+4*i] && temp[2]==labelText[2+4*i] && temp[3]==labelText[3+4*i]) {
+                hasMoved = true
+            }
+            
         }
         // 生成新块
-        generateNewLabel()
+        if hasMoved {
+            generateNewLabel()
+        }
         collectionView.reloadData()
+        checkEnding()
     }
     @objc func handleSwipeToRight() {
-//        print("swipe to right")
+        var hasMoved = false
         for i in 0...3 {
             var index1 = 3
             var index2 = 3
@@ -145,12 +172,14 @@ class ViewController: UIViewController {
                         index2 -= 1
                     }
                     if index1>=0 && index2>=0 && labelText[index1+4*i]==labelText[index2+4*i] {
-                        labelText[index1+4*i] = String(Int(labelText[index2+4*i])! * 2)
+                        hasMoved = true
+                        labelText[index1+4*i] = String(Int(labelText[index1+4*i])! * 2)
                         labelText[index2+4*i] = " "
+                        nowScore += Int(labelText[index1+4*i])!
+                        nowScoreLabel.text = String(nowScore)
                     }
                 }
                 index1 -= 1
-                index2 -= 1
             }
         
             //  向右合并
@@ -166,13 +195,20 @@ class ViewController: UIViewController {
                     tail += 1
                 }
             }
+            if !(temp[0]==labelText[3+4*i] && temp[1]==labelText[2+4*i] && temp[2]==labelText[1+4*i] && temp[3]==labelText[0+4*i]) {
+                hasMoved = true
+            }
+            
         }
         // 生成新块
-        generateNewLabel()
+        if hasMoved {
+            generateNewLabel()
+        }
         collectionView.reloadData()
+        checkEnding()
     }
     @objc func handleSwipeToUp() {
-//        print("swipe to up")
+        var hasMoved = false
         for i in (0...3).reversed() {
             var index1 = 0
             var index2 = 0
@@ -188,12 +224,14 @@ class ViewController: UIViewController {
                         index2 += 1
                     }
                     if index1<=3 && index2<=3 && labelText[i+4*index1]==labelText[i+4*index2] {
+                        hasMoved = true
                         labelText[i+4*index1] = String(Int(labelText[i+4*index1])! * 2)
                         labelText[i+4*index2] = " "
+                        nowScore += Int(labelText[i+4*index1])!
+                        nowScoreLabel.text = String(nowScore)
                     }
                 }
                 index1 += 1
-                index2 += 1
             }
             
             // 向上合并
@@ -209,14 +247,20 @@ class ViewController: UIViewController {
                     tail += 1
                 }
             }
+            if !(temp[0]==labelText[i+4*0] && temp[1]==labelText[i+4*1] && temp[2]==labelText[i+4*2] && temp[3]==labelText[i+4*3]) {
+                hasMoved = true
+            }
         }
         // 生成新块
-        generateNewLabel()
+        if hasMoved {
+            generateNewLabel()
+        }
         collectionView.reloadData()
+        checkEnding()
 
     }
     @objc func handleSwipeToDown() {
-//        print("swipe to down")
+        var hasMoved = false
         for i in 0...3 {
             var index1 = 3
             var index2 = 3
@@ -232,13 +276,16 @@ class ViewController: UIViewController {
                         index2 -= 1
                     }
                     if index1>=0 && index2>=0 && labelText[i+4*index1]==labelText[i+4*index2] {
+                        hasMoved = true
                         labelText[i+4*index1] = String(Int(labelText[i+4*index1])! * 2)
                         labelText[i+4*index2] = " "
+                        nowScore += Int(labelText[i+4*index1])!
+                        nowScoreLabel.text = String(nowScore)
                     }
                 }
                 index1 -= 1
-                index2 -= 1
             }
+            
             // 向下合并
             let temp = [labelText[i+4*3],labelText[i+4*2],labelText[i+4*1],labelText[i+4*0]]
             var head = 0 //计数添加到数组头的元素数
@@ -252,10 +299,57 @@ class ViewController: UIViewController {
                     tail += 1
                 }
             }
+            if !(temp[0]==labelText[i+4*3] && temp[1]==labelText[i+4*2] && temp[2]==labelText[i+4*1] && temp[3]==labelText[i+4*0]) {
+                hasMoved = true
+            }
         }
         // 生成新块
-        generateNewLabel()
+        if hasMoved {
+            generateNewLabel()
+        }
         collectionView.reloadData()
+        checkEnding()
+
+    }
+    
+    func checkEnding() {
+        for i in 0...3 {
+            // 检测横向是否可移动
+            var head = 0, tail = 1
+            for _ in 1...3 {
+                if labelText[head+4*i]==" " || labelText[tail+4*i]==" " {
+                    return
+                } else if labelText[head+4*i] == labelText[tail+4*i] {
+                    return
+                }
+                head += 1
+                tail += 1
+            }
+            // 检测纵向是否可移动
+            head = 0;
+            tail = 1;
+            for _ in 1...3 {
+                if labelText[i+4*head]==" " || labelText[i+4*tail]==" " {
+                    return
+                } else if labelText[i+4*head] == labelText[i+4*tail] {
+                    return
+                }
+                head += 1
+                tail += 1
+            }
+        }
+        
+        let alertController = UIAlertController(title: "2048", message: "一副好牌让你打得稀烂！", preferredStyle: .alert)
+        let cancelAction = UIAlertAction(title: "我不玩了", style: .default, handler: nil)
+        let againAction = UIAlertAction(title: "再来亿次", style: .cancel, handler: {
+            action in
+            self.newGame()
+        })
+        alertController.addAction(cancelAction)
+        alertController.addAction(againAction)
+        self.present(alertController, animated: true, completion: nil)
+        
+
         
     }
     
@@ -289,7 +383,7 @@ class ViewController: UIViewController {
         nowScoreLabel.centerXAnchor.constraint(equalTo: nowScoreTextLabel.centerXAnchor).isActive = true
         nowScoreLabel.topAnchor.constraint(equalTo: nowScoreTextLabel.bottomAnchor, constant: 10).isActive = true
         nowScoreLabel.heightAnchor.constraint(equalToConstant: 30).isActive = true
-        nowScoreLabel.text = "0"
+        nowScoreLabel.text = String(nowScore)
         nowScoreLabel.textColor = UIColor.brown
         nowScoreLabel.font = UIFont.boldSystemFont(ofSize: 28)
     }
@@ -311,7 +405,7 @@ class ViewController: UIViewController {
         highestScoreLabel.translatesAutoresizingMaskIntoConstraints = false
         highestScoreLabel.centerXAnchor.constraint(equalTo: highestScoreTextLabel.centerXAnchor).isActive = true
         highestScoreLabel.topAnchor.constraint(equalTo: highestScoreTextLabel.bottomAnchor, constant: 10).isActive = true
-        highestScoreLabel.text = "0"
+        highestScoreLabel.text = String(highestScore)
         highestScoreLabel.textColor = UIColor.brown
         highestScoreLabel.font = UIFont.boldSystemFont(ofSize: 28)
     }
@@ -352,7 +446,7 @@ class ViewController: UIViewController {
 
 }
 
-extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource, UIApplicationDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return labelText.count
     }
@@ -363,7 +457,12 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource {
         return cell
     }
     
-
-
+    func applicationWillEnterForeground(_ application: UIApplication) {
+//        let userDefaults = UserDefaults.standard
+//        if nowScore>highestScore {
+//            print("userdefaults")
+//            userDefaults.set(nowScore, forKey: "HighestScore")
+//        }
+    }
 }
 
