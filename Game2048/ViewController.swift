@@ -457,12 +457,5 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource, 
         return cell
     }
     
-    func applicationWillEnterForeground(_ application: UIApplication) {
-//        let userDefaults = UserDefaults.standard
-//        if nowScore>highestScore {
-//            print("userdefaults")
-//            userDefaults.set(nowScore, forKey: "HighestScore")
-//        }
-    }
 }
 

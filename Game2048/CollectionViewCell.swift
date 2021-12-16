@@ -76,24 +76,6 @@ class CollectionViewCell: UICollectionViewCell {
         
     }
     
-    /**
-     let emptyTile=hexStringToUIColor("DED1C0")
-     let notWhite=hexStringToUIColor("A29789")
-     let n2=hexStringToUIColor("FAE7D7")
-     let n4=hexStringToUIColor("FFE4CC")
-     let n8=hexStringToUIColor("FFC37C")
-     let n16=hexStringToUIColor("FF9D2B")
-     let n32=hexStringToUIColor("FF8B00")
-     let n64=hexStringToUIColor("FF6C00")
-     let n128=hexStringToUIColor("D6BB9F")
-     let n256=hexStringToUIColor("BEAC91")
-     let n512=hexStringToUIColor("FFE098")
-     let n1024=hexStringToUIColor("EAC572")
-     let n2048=hexStringToUIColor("FFC441")
-     let n4096=hexStringToUIColor("FFB000")
-     
-     */
-    
     func hexStringToUIColor (_ hex:String) -> UIColor {
         var cString:String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         
